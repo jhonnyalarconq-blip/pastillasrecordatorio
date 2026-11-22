@@ -26,6 +26,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 <p>Toca el botón y acepta el permiso para recibir una notificación a la hora de cada toma, aunque esta página esté cerrada.</p>
 <button id="b" disabled>Activar notificaciones</button>
 <div id="st" role="status">Cargando...</div>
+<p id="det" style="font-size:.75rem;word-break:break-all"></p>
 <p id="ios" hidden>En iPhone: toca Compartir, elige “Agregar a pantalla de inicio”, abre la app desde ese ícono y activa las notificaciones desde ahí.</p>
 </div>
 </main>
@@ -57,12 +58,18 @@ function iniciar(appId){
       else{st("Aún no activadas.");$("b").disabled=false}
     }
     try{ps.addEventListener("change",refrescar)}catch(e){}
+    var err="";
+    async function detalle(){
+      var sw="?";
+      try{var rs=await navigator.serviceWorker.getRegistrations();sw=rs.length?rs.map(function(r){return r.scope}).join(","):"ninguno"}catch(e){sw="error"}
+      $("det").textContent="Detalles: permiso="+OneSignal.Notifications.permission+" · optedIn="+ps.optedIn+" · id="+(ps.id||"vacío")+" · service worker="+sw+(err?" · error="+err:"");
+    }
     $("b").onclick=async function(){
-      st("Activando...");
-      try{await OneSignal.Notifications.requestPermission();await ps.optIn()}catch(e){}
-      setTimeout(refrescar,3000);
+      st("Activando...");err="";
+      try{await OneSignal.Notifications.requestPermission();await ps.optIn()}catch(e){err=(e&&e.message)||String(e)}
+      setTimeout(function(){refrescar();detalle()},4000);
     };
-    refrescar();
+    refrescar();detalle();
   });
 }
 </script>
