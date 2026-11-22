@@ -49,12 +49,19 @@ function iniciar(appId){
   document.head.appendChild(sc);
   OneSignalDeferred.push(async function(OneSignal){
     await OneSignal.init({appId:appId,serviceWorkerPath:dir.slice(1)+"OneSignalSDKWorker.js",serviceWorkerParam:{scope:dir}});
+    var ps=OneSignal.User.PushSubscription;
     function refrescar(){
-      if(OneSignal.Notifications.permission){st("✅ Notificaciones activadas. Ya puedes cerrar esta página.","ok");$("b").disabled=true}
+      if(OneSignal.Notifications.permission&&ps.optedIn&&ps.id){st("✅ Registrado correctamente. Ya puedes cerrar esta página.","ok");$("b").disabled=true}
+      else if(OneSignal.Notifications.permission){st("Permiso aceptado, pero el celular aún no quedó registrado. Toca el botón otra vez o espera unos segundos.","err");$("b").disabled=false}
       else if(window.Notification&&Notification.permission==="denied"){st("Las notificaciones están bloqueadas. Actívalas desde los permisos del navegador para este sitio.","err")}
       else{st("Aún no activadas.");$("b").disabled=false}
     }
-    $("b").onclick=async function(){await OneSignal.Notifications.requestPermission();refrescar()};
+    try{ps.addEventListener("change",refrescar)}catch(e){}
+    $("b").onclick=async function(){
+      st("Activando...");
+      try{await OneSignal.Notifications.requestPermission();await ps.optIn()}catch(e){}
+      setTimeout(refrescar,3000);
+    };
     refrescar();
   });
 }
