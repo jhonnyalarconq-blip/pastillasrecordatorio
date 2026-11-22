@@ -170,6 +170,7 @@ $("test").onclick=async function(){
   if(r){var x=r.res||{},p=[];
     if("wa" in x)p.push("WhatsApp: código "+x.wa);
     if("push" in x)p.push("Notificación: código "+x.push);
+    if(x.pushMsg)p.push("Respuesta de OneSignal: "+x.pushMsg);
     msg("Prueba enviada. "+(p.join(" · ")||"Ningún canal activo")+" (200 = bien). Guarda antes de probar si cambiaste datos.",1)}
 };
 $("copy").onclick=function(){
